@@ -1,0 +1,21 @@
+{
+  "id": "energy_monitor_3",
+  "alias": "Energy: Daily HVAC Summary",
+  "description": "Creates a daily summary of HVAC activity and room temps at 8 AM",
+  "triggers": [
+    {
+      "platform": "time",
+      "at": "08:00:00"
+    }
+  ],
+  "actions": [
+    {
+      "data": {
+        "title": "\ud83d\udcca Daily Energy Check",
+        "message": "Downstairs: {{ state_attr('climate.downstairs', 'current_temperature') }}\u00b0F (target {{ state_attr('climate.downstairs', 'target_temp_low') }}-{{ state_attr('climate.downstairs', 'target_temp_high') }}\u00b0F) - {{ state_attr('climate.downstairs', 'hvac_action') }}\nUpstairs: {{ state_attr('climate.upstairs', 'current_temperature') }}\u00b0F (target {{ state_attr('climate.upstairs', 'target_temp_low') }}-{{ state_attr('climate.upstairs', 'target_temp_high') }}\u00b0F) - {{ state_attr('climate.upstairs', 'hvac_action') }}\nDen: {{ states('sensor.temp_sensor_den_temperature') }}\u00b0F\nLiving Room: {{ states('sensor.temp_sensor_lr_temperature') }}\u00b0F\nLaura: {{ states('sensor.xiaomi_lywsd03mmc_z_temperature_2') }}\u00b0F\nHalf Bath: {{ states('sensor.half_bath_sensor_temperature') }}\u00b0F"
+      },
+      "action": "persistent_notification.create"
+    }
+  ],
+  "mode": "single"
+}

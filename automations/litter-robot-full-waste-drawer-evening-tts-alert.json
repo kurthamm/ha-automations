@@ -1,0 +1,37 @@
+{
+  "id": "1754112197265",
+  "alias": "Litter-Robot Full Waste Drawer Alert (Evenings, All Speakers)",
+  "description": "Alerts via TTS on all speakers when the litter robot waste drawer is above 85%. Runs at 8 PM and 10 PM, and stops once the drawer is emptied.",
+  "triggers": [
+    {
+      "at": "20:00:00",
+      "trigger": "time"
+    },
+    {
+      "at": "22:00:00",
+      "trigger": "time"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "numeric_state",
+      "entity_id": "sensor.hamm_litter_robot_4_waste_drawer",
+      "above": 84
+    },
+    {
+      "condition": "time",
+      "after": "19:00:00",
+      "before": "23:00:00"
+    }
+  ],
+  "actions": [
+    {
+      "data": {
+        "entity_id": "media_player.home_speakers_all",
+        "message": "The litter robot waste drawer is {{ states('sensor.hamm_litter_robot_4_waste_drawer') }} percent full. Please empty it soon to avoid a very disappointed cat."
+      },
+      "action": "tts.cloud_say"
+    }
+  ],
+  "mode": "single"
+}

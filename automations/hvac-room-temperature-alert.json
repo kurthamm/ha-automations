@@ -1,0 +1,47 @@
+{
+  "id": "1733180000000",
+  "alias": "HVAC - Room Temperature Alert",
+  "description": "Alert when room sensors differ significantly from thermostat",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/15"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "variables": {
+        "downstairs_thermo": "{{ states(\"sensor.downstairs_temperature\") | float(70) }}",
+        "upstairs_thermo": "{{ states(\"sensor.upstairs_temperature\") | float(70) }}",
+        "jamie_home": "{{ is_state(\"input_boolean.jamie_home\", \"on\") }}",
+        "threshold": 5,
+        "master_diff": "{{ (states(\"sensor.temp_sensor_mbr_temperature\") | float(0) - downstairs_thermo) | abs if states(\"sensor.temp_sensor_mbr_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "office_diff": "{{ (states(\"sensor.temp_sensor_office_temperature\") | float(0) - downstairs_thermo) | abs if states(\"sensor.temp_sensor_office_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "den_diff": "{{ (states(\"sensor.temp_sensor_den_temperature\") | float(0) - downstairs_thermo) | abs if states(\"sensor.temp_sensor_den_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "living_diff": "{{ (states(\"sensor.temp_sensor_lr_temperature\") | float(0) - downstairs_thermo) | abs if states(\"sensor.temp_sensor_lr_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "lauras_diff": "{{ (states(\"sensor.temp_sensor_laura_temperature\") | float(0) - upstairs_thermo) | abs if states(\"sensor.temp_sensor_laura_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "jamies_diff": "{{ (states(\"sensor.temp_sensor_jamie_temperature\") | float(0) - upstairs_thermo) | abs if jamie_home and states(\"sensor.temp_sensor_jamie_temperature\") not in [\"unavailable\", \"unknown\"] else 0 }}",
+        "has_alert": "{{ master_diff > threshold or office_diff > threshold or den_diff > threshold or living_diff > threshold or lauras_diff > threshold or jamies_diff > threshold }}"
+      }
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ has_alert }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "notify.persistent_notification",
+          "data": {
+            "title": "HVAC Temperature Alert",
+            "message": "Room temperature differs >{{ threshold }}\u00b0F from thermostat: {% if master_diff > threshold %}Master Bedroom: {{ states(\"sensor.temp_sensor_mbr_temperature\") }}\u00b0F ({{ master_diff | round(1) }}\u00b0F diff) {% endif %}{% if office_diff > threshold %}Office: {{ states(\"sensor.temp_sensor_office_temperature\") }}\u00b0F ({{ office_diff | round(1) }}\u00b0F diff) {% endif %}{% if den_diff > threshold %}Den: {{ states(\"sensor.temp_sensor_den_temperature\") }}\u00b0F ({{ den_diff | round(1) }}\u00b0F diff) {% endif %}{% if living_diff > threshold %}Living Room: {{ states(\"sensor.temp_sensor_lr_temperature\") }}\u00b0F ({{ living_diff | round(1) }}\u00b0F diff) {% endif %}{% if lauras_diff > threshold %}Laura's Room: {{ states(\"sensor.temp_sensor_laura_temperature\") }}\u00b0F ({{ lauras_diff | round(1) }}\u00b0F diff) {% endif %}{% if jamies_diff > threshold %}Jamie's Room: {{ states(\"sensor.temp_sensor_jamie_temperature\") }}\u00b0F ({{ jamies_diff | round(1) }}\u00b0F diff) {% endif %}\n"
+          }
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

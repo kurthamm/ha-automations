@@ -1,0 +1,49 @@
+{
+  "id": "walmart_garage_safety_timeout_1770918651",
+  "alias": "Walmart Delivery: Safety Timeout (45 min max)",
+  "description": "Failsafe: If garage is fully open (100%) for more than 45 minutes with Walmart override on, close to 20% vent position. Prevents garage staying open indefinitely if delivery status never updates.",
+  "triggers": [
+    {
+      "trigger": "state",
+      "entity_id": "input_boolean.walmart_garage_override",
+      "to": "on",
+      "for": {
+        "minutes": 45
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "numeric_state",
+      "entity_id": "cover.door_position",
+      "attribute": "current_position",
+      "above": 90
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "cover.door_position"
+      },
+      "data": {
+        "position": 20
+      },
+      "action": "cover.set_cover_position"
+    },
+    {
+      "data": {
+        "title": "Garage Safety Timeout",
+        "message": "Garage was open >45 min during Walmart delivery mode. Closed to 20% vent for safety. Override still active."
+      },
+      "action": "persistent_notification.create"
+    },
+    {
+      "action": "notify.mobile_app_sm_f766u",
+      "data": {
+        "title": "\ud83d\udea8 Garage Safety Timeout",
+        "message": "Garage was open >45 min. Closed to 20% vent."
+      }
+    }
+  ],
+  "mode": "single"
+}

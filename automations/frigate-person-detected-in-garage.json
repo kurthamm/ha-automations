@@ -1,0 +1,27 @@
+{
+  "id": "frigate_person_garage",
+  "alias": "Frigate Person Detected in Garage",
+  "description": "Alert when Frigate detects a person in the garage",
+  "triggers": [
+    {
+      "trigger": "state",
+      "entity_id": "binary_sensor.garage_cam_person_occupancy",
+      "from": "off",
+      "to": "on"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "action": "notify.mobile_app_sm_f751u1",
+      "data": {
+        "title": "\ud83d\udea8 Person in Garage",
+        "message": "Frigate detected a person in the garage at {{ now().strftime(\"%I:%M %p\") }}",
+        "data": {
+          "image": "/api/frigate/notifications/{{trigger.to_state.attributes.last_event_id}}/thumbnail.jpg"
+        }
+      }
+    }
+  ],
+  "mode": "single"
+}

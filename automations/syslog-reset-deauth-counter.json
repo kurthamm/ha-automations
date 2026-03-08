@@ -1,0 +1,20 @@
+{
+  "id": "syslog_deauth_reset",
+  "alias": "Syslog: Reset Deauth Counter",
+  "description": "Reset counter every 2 minutes",
+  "mode": "single",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/2"
+    }
+  ],
+  "actions": [
+    {
+      "action": "counter.reset",
+      "target": {
+        "entity_id": "counter.wifi_deauth_events"
+      }
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "1755022260159",
+  "alias": "Walmart Garage - OPEN when driver is on the way",
+  "description": "Open garage when Walmart notification indicates driver is ACTUALLY en route (not order confirmation). Checks title and text for real delivery notifications. Enables override and locks kitchen door if unlocked.",
+  "triggers": [
+    {
+      "entity_id": "sensor.sm_f766u_last_notification",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{{ state_attr('sensor.sm_f766u_last_notification', 'package') == 'com.walmart.android' }}"
+    },
+    {
+      "condition": "template",
+      "value_template": "{% set n = (states('sensor.sm_f766u_last_notification') or '') | lower %}\n{% set t = (state_attr('sensor.sm_f766u_last_notification', 'android.title') or '') | lower %}\n{% set combined = n ~ ' ' ~ t %}\n{# EXCLUDE order confirmations - these say delivery is coming LATER #}\n{% set is_confirmation = 'we\\'ll send an alert' in combined or 'delivery order received' in t %}\n{# REAL en-route notifications #}\n{% set is_real_enroute = \n    'expect delivery around' in combined or \n    'your delivery is on the way' in combined or \n    'is set to arrive by' in combined or\n    'delivery is set to arrive' in combined or\n    ('will leave your' in combined and 'tap to track' in combined) %}\n{{ is_real_enroute and not is_confirmation }}"
+    },
+    {
+      "condition": "time",
+      "after": "07:00:00",
+      "before": "23:59:59"
+    },
+    {
+      "condition": "numeric_state",
+      "entity_id": "cover.door_position",
+      "attribute": "current_position",
+      "below": 100
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "input_boolean.walmart_garage_override"
+      },
+      "action": "input_boolean.turn_on"
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "lock.u_bolt_wifi",
+              "state": "unlocked"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": "lock.u_bolt_wifi"
+              },
+              "action": "lock.lock"
+            },
+            {
+              "data": {
+                "title": "Door Locked",
+                "message": "Kitchen door was unlocked and is now locked for security"
+              },
+              "action": "persistent_notification.create"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "target": {
+        "entity_id": "cover.door_position"
+      },
+      "data": {
+        "position": 100
+      },
+      "action": "cover.set_cover_position"
+    },
+    {
+      "data": {
+        "title": "Walmart Delivery Alert",
+        "message": "Driver is actually en route \u2014 garage opened."
+      },
+      "action": "persistent_notification.create"
+    }
+  ],
+  "mode": "single"
+}

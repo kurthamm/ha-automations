@@ -1,0 +1,75 @@
+{
+  "id": "hvac_fan_circulation",
+  "alias": "HVAC: Fan Circulation",
+  "description": "Run furnace fan 15min/hr during occupied hours to mix warm office air with cooler den air. Reduces zone temperature differences.",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/15"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "variables": {
+        "current_hour": "{{ now().hour + (now().minute / 60) }}",
+        "current_minute_in_hour": "{{ now().minute % 60 }}",
+        "is_weekend": "{{ now().weekday() in [5, 6] }}",
+        "morning_wake": "{{ state_attr(\"input_datetime.hvac_morning_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_morning_wake\", \"minute\") / 60) }}",
+        "weekday_bedtime": "{{ state_attr(\"input_datetime.hvac_weekday_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekday_bedtime\", \"minute\") / 60) }}",
+        "weekend_wake": "{{ state_attr(\"input_datetime.hvac_weekend_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_wake\", \"minute\") / 60) }}",
+        "weekend_bedtime": "{{ state_attr(\"input_datetime.hvac_weekend_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_bedtime\", \"minute\") / 60) }}",
+        "wake_time": "{% if is_weekend %}{{ weekend_wake }}{% else %}{{ morning_wake }}{% endif %}",
+        "bed_time": "{% if is_weekend %}{{ weekend_bedtime }}{% else %}{{ weekday_bedtime }}{% endif %}",
+        "is_occupied": "{{ current_hour >= wake_time and current_hour < bed_time }}",
+        "hvac_idle": "{{ state_attr(\"climate.downstairs\", \"hvac_action\") in [\"idle\", \"off\"] }}",
+        "fan_on_minutes": 15,
+        "should_fan_on": "{{ is_occupied and current_minute_in_hour < fan_on_minutes }}",
+        "should_fan_off": "{{ not is_occupied or current_minute_in_hour >= fan_on_minutes }}"
+      }
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ should_fan_on and state_attr(\"climate.downstairs\", \"fan_mode\") != \"on\" }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "climate.set_fan_mode",
+              "target": {
+                "entity_id": "climate.downstairs"
+              },
+              "data": {
+                "fan_mode": "on"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ should_fan_off and state_attr(\"climate.downstairs\", \"fan_mode\") != \"off\" }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "climate.set_fan_mode",
+              "target": {
+                "entity_id": "climate.downstairs"
+              },
+              "data": {
+                "fan_mode": "off"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

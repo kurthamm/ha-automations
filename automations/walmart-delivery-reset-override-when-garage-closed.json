@@ -1,0 +1,47 @@
+{
+  "id": "1755022349829",
+  "alias": "Walmart Garage - Reset override when safe",
+  "description": "Turn OFF override whenever door is closed or at/below vent position for 60s.",
+  "triggers": [
+    {
+      "entity_id": "cover.door_position",
+      "to": "closed",
+      "for": {
+        "minutes": 1
+      },
+      "trigger": "state"
+    },
+    {
+      "trigger": "numeric_state",
+      "entity_id": "cover.door_position",
+      "attribute": "current_position",
+      "below": "input_number.garage_morning_vent_position",
+      "for": {
+        "minutes": 1
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "state",
+      "entity_id": "input_boolean.walmart_garage_override",
+      "state": "on"
+    }
+  ],
+  "actions": [
+    {
+      "action": "input_boolean.turn_off",
+      "target": {
+        "entity_id": "input_boolean.walmart_garage_override"
+      }
+    },
+    {
+      "action": "persistent_notification.create",
+      "data": {
+        "title": "Walmart Mode Reset",
+        "message": "Garage is closed or at vent; override turned OFF."
+      }
+    }
+  ],
+  "mode": "single"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "1763239885300",
+  "alias": "Garage: Sync Hue Lights with Opener Light",
+  "description": "When opener light turns ON, turn on Hue garage lights. Mode restart handles rapid button presses.",
+  "triggers": [
+    {
+      "platform": "state",
+      "entity_id": "light.ratgdo32_9a3a30_light",
+      "to": "on"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_white_lamp_1",
+          "light.hue_white_lamp_2"
+        ]
+      },
+      "action": "light.turn_on"
+    }
+  ],
+  "mode": "restart"
+}

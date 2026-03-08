@@ -1,0 +1,60 @@
+{
+  "id": "1754115757466",
+  "alias": "Microwave Done - TTS Alert All Speakers",
+  "description": "Announces when the GE microwave cooking is completed. Silent during early mornings/late nights.",
+  "triggers": [
+    {
+      "entity_id": "sensor.d828c90fa232_microwave_state_status",
+      "to": "Completed",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "or",
+      "conditions": [
+        {
+          "condition": "and",
+          "conditions": [
+            {
+              "condition": "time",
+              "weekday": [
+                "mon",
+                "tue",
+                "wed",
+                "thu",
+                "fri"
+              ],
+              "after": "08:30:00",
+              "before": "23:59:59"
+            }
+          ]
+        },
+        {
+          "condition": "and",
+          "conditions": [
+            {
+              "condition": "time",
+              "weekday": [
+                "sat",
+                "sun"
+              ],
+              "after": "12:00:00",
+              "before": "23:59:59"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "data": {
+        "entity_id": "media_player.home_speakers_all",
+        "message": "The microwave is done!"
+      },
+      "action": "tts.cloud_say"
+    }
+  ],
+  "mode": "single"
+}

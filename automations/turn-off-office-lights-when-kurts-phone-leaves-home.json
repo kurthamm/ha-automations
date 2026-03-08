@@ -1,0 +1,57 @@
+{
+  "id": "1750949911089",
+  "alias": "Turn Off Office Lights When Kurt's Phone Leaves Home",
+  "description": "Turns off office lights when Kurt's phone leaves home",
+  "triggers": [
+    {
+      "entity_id": "device_tracker.sm_f766u",
+      "from": "home",
+      "to": "not_home",
+      "for": {
+        "minutes": 2
+      },
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "or",
+      "conditions": [
+        {
+          "condition": "state",
+          "entity_id": "light.office_light_1",
+          "state": "on"
+        },
+        {
+          "condition": "state",
+          "entity_id": "light.hue_white_lamp_1_2",
+          "state": "on"
+        },
+        {
+          "condition": "state",
+          "entity_id": "light.office_light_3",
+          "state": "on"
+        },
+        {
+          "condition": "state",
+          "entity_id": "light.office_light_4",
+          "state": "on"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": [
+          "light.office_light_1",
+          "light.office_light_3",
+          "light.office_light_4",
+          "light.hue_white_lamp_1_2"
+        ]
+      },
+      "action": "light.turn_off"
+    }
+  ],
+  "mode": "single"
+}

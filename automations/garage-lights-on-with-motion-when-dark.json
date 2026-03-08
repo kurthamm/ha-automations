@@ -1,0 +1,55 @@
+{
+  "id": "1755023607279",
+  "alias": "Garage: Lights On with Motion (6AM-Midnight)",
+  "description": "TriSensor 8 or Garage Cam motion triggers Hue garage lights. Time-restricted 6AM-midnight. Lux < 500 (liberal - garage gets dark even daytime). Auto-off 30 min.",
+  "triggers": [
+    {
+      "trigger": "state",
+      "entity_id": "binary_sensor.trisensor_8_motion_detection",
+      "to": "on"
+    },
+    {
+      "trigger": "state",
+      "entity_id": "binary_sensor.garage_cam_person_occupancy",
+      "to": "on"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "time",
+      "after": "06:00:00",
+      "before": "23:59:00"
+    },
+    {
+      "condition": "numeric_state",
+      "entity_id": "sensor.trisensor_8_illuminance",
+      "below": 500
+    }
+  ],
+  "actions": [
+    {
+      "action": "light.turn_on",
+      "target": {
+        "entity_id": [
+          "light.hue_white_lamp_1",
+          "light.hue_white_lamp_2"
+        ]
+      }
+    },
+    {
+      "delay": {
+        "minutes": 30
+      }
+    },
+    {
+      "action": "light.turn_off",
+      "target": {
+        "entity_id": [
+          "light.hue_white_lamp_1",
+          "light.hue_white_lamp_2"
+        ]
+      }
+    }
+  ],
+  "mode": "restart"
+}

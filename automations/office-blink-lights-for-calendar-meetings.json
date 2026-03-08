@@ -1,0 +1,65 @@
+{
+  "id": "1752766575284",
+  "alias": "Meeting TTS Alert",
+  "triggers": [
+    {
+      "id": "before_meeting",
+      "entity_id": "calendar.work",
+      "event": "start",
+      "offset": "-00:05:00",
+      "trigger": "calendar"
+    },
+    {
+      "id": "start_meeting",
+      "entity_id": "calendar.work",
+      "event": "start",
+      "offset": "00:00:00",
+      "trigger": "calendar"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "time",
+      "after": "07:00:00",
+      "before": "20:00:00"
+    }
+  ],
+  "variables": {
+    "blink_count": "{% if trigger.id == 'before_meeting' %}\n  2\n{% else %}\n  4\n{% endif %}\n",
+    "tts_message": "{% if trigger.id == 'before_meeting' %}\n  Your meeting starts in five minutes.\n{% else %}\n  Your meeting is starting now.\n{% endif %}\n"
+  },
+  "actions": [
+    {
+      "data": {
+        "name": "Meeting Blink",
+        "message": "Trigger '{{ trigger.id }}' fired at {{ now().strftime('%H:%M:%S') }}"
+      },
+      "action": "logbook.log"
+    },
+    {
+      "data": {
+        "entity_id": "media_player.office_speaker",
+        "message": "{{ tts_message }}"
+      },
+      "action": "tts.cloud_say"
+    },
+    {
+      "repeat": {
+        "count": "{{ blink_count }}",
+        "sequence": [
+          {
+            "data": {
+              "entity_id": "light.office"
+            },
+            "action": "light.toggle"
+          },
+          {
+            "delay": "00:00:02"
+          }
+        ]
+      }
+    }
+  ],
+  "mode": "single",
+  "description": "TTS alert 5 minutes before and at meeting start from HA Work calendar"
+}

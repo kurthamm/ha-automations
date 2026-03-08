@@ -1,0 +1,67 @@
+{
+  "id": "1754854301325",
+  "alias": "Tovala done \u2192 TTS all speakers (parallel)",
+  "triggers": [
+    {
+      "entity_id": "sensor.sm_f766u_last_notification",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set pkg = state_attr('sensor.sm_f766u_last_notification','package') or states('sensor.sm_f766u_last_notification') %} {% set txt = (state_attr('sensor.sm_f766u_last_notification','android.bigText') or state_attr('sensor.sm_f766u_last_notification','android.text') or '') | lower %} {{ pkg == 'com.tovala.tovala' and 'your food is ready' in txt }}"
+    }
+  ],
+  "actions": [
+    {
+      "parallel": [
+        {
+          "target": {
+            "entity_id": "tts.home_assistant_cloud"
+          },
+          "data": {
+            "media_player_entity_id": "media_player.den_mini",
+            "cache": true,
+            "message": "Tovala says: Great news! Your food is ready."
+          },
+          "action": "tts.speak"
+        },
+        {
+          "target": {
+            "entity_id": "tts.home_assistant_cloud"
+          },
+          "data": {
+            "media_player_entity_id": "media_player.kitchen_speaker",
+            "cache": true,
+            "message": "Tovala says: Great news! Your food is ready."
+          },
+          "action": "tts.speak"
+        },
+        {
+          "target": {
+            "entity_id": "tts.home_assistant_cloud"
+          },
+          "data": {
+            "media_player_entity_id": "media_player.master_bedroom_g_mini",
+            "cache": true,
+            "message": "Tovala says: Great news! Your food is ready."
+          },
+          "action": "tts.speak"
+        },
+        {
+          "target": {
+            "entity_id": "tts.home_assistant_cloud"
+          },
+          "data": {
+            "media_player_entity_id": "media_player.office_speaker",
+            "cache": true,
+            "message": "Tovala says: Great news! Your food is ready."
+          },
+          "action": "tts.speak"
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

@@ -1,0 +1,49 @@
+{
+  "id": "upstairs_climate_control",
+  "alias": "Upstairs Climate Control",
+  "description": "Independent upstairs thermostat schedule. Day/night temps with Jamie Home bypass. Completely separate from downstairs/den automation.",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/15"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "state",
+      "entity_id": "input_boolean.jamie_home",
+      "state": "off"
+    }
+  ],
+  "actions": [
+    {
+      "variables": {
+        "current_hour": "{{ now().hour + (now().minute / 60) }}",
+        "is_weekend": "{{ now().weekday() in [5, 6] }}",
+        "weekday_wake": "{{ state_attr('input_datetime.upstairs_weekday_wake', 'hour') + (state_attr('input_datetime.upstairs_weekday_wake', 'minute') / 60) }}",
+        "weekday_bedtime": "{{ state_attr('input_datetime.upstairs_weekday_bedtime', 'hour') + (state_attr('input_datetime.upstairs_weekday_bedtime', 'minute') / 60) }}",
+        "weekend_wake": "{{ state_attr('input_datetime.upstairs_weekend_wake', 'hour') + (state_attr('input_datetime.upstairs_weekend_wake', 'minute') / 60) }}",
+        "weekend_bedtime": "{{ state_attr('input_datetime.upstairs_weekend_bedtime', 'hour') + (state_attr('input_datetime.upstairs_weekend_bedtime', 'minute') / 60) }}",
+        "is_weekday_night": "{{ not is_weekend and (current_hour >= weekday_bedtime or current_hour < weekday_wake) }}",
+        "is_weekend_night": "{{ is_weekend and (current_hour >= weekend_bedtime or current_hour < weekend_wake) }}",
+        "is_night": "{{ is_weekday_night or is_weekend_night }}",
+        "day_temp": "{{ states('input_number.hvac_upstairs_day_temp') | float(69) }}",
+        "night_temp": "{{ states('input_number.hvac_upstairs_night_temp') | float(66) }}",
+        "target": "{% if is_night %}{{ night_temp }}{% else %}{{ day_temp }}{% endif %}",
+        "comfort_band": 8
+      }
+    },
+    {
+      "action": "climate.set_temperature",
+      "target": {
+        "entity_id": "climate.upstairs"
+      },
+      "data": {
+        "hvac_mode": "heat_cool",
+        "target_temp_low": "{{ target | int }}",
+        "target_temp_high": "{{ (target | int) + comfort_band }}"
+      }
+    }
+  ],
+  "mode": "single"
+}

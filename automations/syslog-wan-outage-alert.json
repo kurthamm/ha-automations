@@ -1,0 +1,31 @@
+{
+  "id": "syslog_wan_outage",
+  "alias": "Syslog: WAN Outage Alert",
+  "description": "Alert immediately when WAN goes down",
+  "mode": "single",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "syslog_receiver_message"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set msg = trigger.event.data.message | lower %} {{ \"wan down\" in msg or \"wan disconn\" in msg or \"link down\" in msg or \n   \"pppoe\" in msg or \"connection lost\" in msg or \"no carrier\" in msg }}\n"
+    }
+  ],
+  "actions": [
+    {
+      "action": "notify.mobile_app_kurt_s_flip_7",
+      "data": {
+        "title": "\ud83d\udea8 INTERNET DOWN",
+        "message": "{{ trigger.event.data.message[:200] }}",
+        "data": {
+          "priority": "high",
+          "ttl": 0
+        }
+      }
+    }
+  ]
+}

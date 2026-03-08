@@ -1,0 +1,71 @@
+{
+  "id": "1750574034202",
+  "alias": "Litter Box Notifications",
+  "description": "Sends alerts when litter is low or waste bin is full",
+  "triggers": [
+    {
+      "entity_id": "sensor.hamm_litter_robot_4_litter_level",
+      "below": 50,
+      "id": "litter_low",
+      "trigger": "numeric_state"
+    },
+    {
+      "entity_id": "sensor.hamm_litter_robot_4_waste_drawer",
+      "above": 90,
+      "id": "waste_full",
+      "trigger": "numeric_state"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "litter_low"
+            }
+          ],
+          "sequence": [
+            {
+              "data": {
+                "message": "Litter is Low"
+              },
+              "action": "notify.mobile_app_fin_stacey_hamm"
+            },
+            {
+              "data": {
+                "message": "Litter is Low"
+              },
+              "action": "persistent_notification.create"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "waste_full"
+            }
+          ],
+          "sequence": [
+            {
+              "data": {
+                "message": "Litter Waste Basket is full"
+              },
+              "action": "notify.mobile_app_fin_stacey_hamm"
+            },
+            {
+              "data": {
+                "message": "Litter Waste Bucket is full"
+              },
+              "action": "persistent_notification.create"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

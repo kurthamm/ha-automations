@@ -1,0 +1,63 @@
+{
+  "id": "1734480000000",
+  "alias": "Christmas Trees - Sunset to Midnight",
+  "description": "Turn on Christmas Tree and Little Trees on Porch at sunset, turn off at midnight",
+  "triggers": [
+    {
+      "event": "sunset",
+      "id": "sunset",
+      "trigger": "sun"
+    },
+    {
+      "at": "00:00:00",
+      "id": "midnight",
+      "trigger": "time"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "sunset"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": [
+                  "switch.heater_socket",
+                  "switch.den_heater_socket"
+                ]
+              },
+              "action": "switch.turn_on"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "midnight"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": [
+                  "switch.heater_socket",
+                  "switch.den_heater_socket"
+                ]
+              },
+              "action": "switch.turn_off"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

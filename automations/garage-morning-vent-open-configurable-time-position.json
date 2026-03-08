@@ -1,0 +1,29 @@
+{
+  "id": "1752357553680",
+  "alias": "Open Garage to Configured Vent Position at Configured Time",
+  "description": "Vent the LiftMaster 8165W garage door using configurable time and position. Skips if already at target.",
+  "triggers": [
+    {
+      "platform": "time",
+      "at": "input_datetime.garage_morning_vent_time"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{{ state_attr(\"cover.door_position\", \"current_position\") | int(0) != states(\"input_number.garage_morning_vent_position\") | int(20) }}"
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "cover.door_position"
+      },
+      "data": {
+        "position": "{{ states(\"input_number.garage_morning_vent_position\") | int(20) }}"
+      },
+      "action": "cover.set_cover_position"
+    }
+  ],
+  "mode": "single"
+}

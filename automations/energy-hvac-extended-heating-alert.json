@@ -1,0 +1,29 @@
+{
+  "id": "energy_monitor_1",
+  "alias": "Energy: HVAC Extended Heating Alert",
+  "description": "Alerts when HVAC has been actively heating for 30+ minutes continuously - likely aux heat strips",
+  "triggers": [
+    {
+      "platform": "state",
+      "entity_id": [
+        "climate.downstairs",
+        "climate.upstairs"
+      ],
+      "attribute": "hvac_action",
+      "to": "heating",
+      "for": {
+        "minutes": 30
+      }
+    }
+  ],
+  "actions": [
+    {
+      "data": {
+        "title": "\u26a1 Extended HVAC Heating",
+        "message": "{{ trigger.entity_id }} has been heating continuously for 30+ minutes. Aux heat strips may be running. Current temp: {{ state_attr(trigger.entity_id, 'current_temperature') }}\u00b0F, Target low: {{ state_attr(trigger.entity_id, 'target_temp_low') }}\u00b0F"
+      },
+      "action": "persistent_notification.create"
+    }
+  ],
+  "mode": "single"
+}

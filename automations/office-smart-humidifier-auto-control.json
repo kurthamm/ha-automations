@@ -1,0 +1,134 @@
+{
+  "id": "1753424083503",
+  "alias": "Smart Office Humidifier Manager (Comfort, Display Always Off)",
+  "description": "Comfort-first humidity control for OasisMist 4.5L. Forces the display OFF on every run. Uses hysteresis to avoid flapping.\n",
+  "triggers": [
+    {
+      "minutes": "/2",
+      "trigger": "time_pattern"
+    },
+    {
+      "entity_id": [
+        "sensor.oasismisttm_4_5l_humidity",
+        "binary_sensor.oasismisttm_4_5l_low_water",
+        "binary_sensor.oasismisttm_4_5l_water_tank_lifted"
+      ],
+      "trigger": "state"
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "switch.oasismisttm_4_5l_display"
+      },
+      "action": "switch.turn_off"
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ low_water or tank_lifted }}"
+            }
+          ],
+          "sequence": [
+            {
+              "if": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ is_on }}"
+                }
+              ],
+              "then": [
+                {
+                  "target": {
+                    "entity_id": "humidifier.oasismisttm_4_5l"
+                  },
+                  "action": "humidifier.turn_off"
+                }
+              ]
+            },
+            {
+              "stop": "Stopped due to low water or tank lifted"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ h <= on_below }}"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": "humidifier.oasismisttm_4_5l"
+              },
+              "action": "humidifier.turn_on"
+            },
+            {
+              "target": {
+                "entity_id": "humidifier.oasismisttm_4_5l"
+              },
+              "data": {
+                "mode": "auto"
+              },
+              "action": "humidifier.set_mode"
+            },
+            {
+              "target": {
+                "entity_id": "humidifier.oasismisttm_4_5l"
+              },
+              "data": {
+                "humidity": 50
+              },
+              "action": "humidifier.set_humidity"
+            },
+            {
+              "target": {
+                "entity_id": "number.oasismisttm_4_5l_mist_level"
+              },
+              "data": {
+                "value": 1
+              },
+              "action": "number.set_value"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ h >= off_above and is_on }}"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": "humidifier.oasismisttm_4_5l"
+              },
+              "action": "humidifier.turn_off"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "restart",
+  "variables": {
+    "h": "{{ states('sensor.oasismisttm_4_5l_humidity')|float(0) }}",
+    "low_water": "{{ is_state('binary_sensor.oasismisttm_4_5l_low_water','on') }}",
+    "tank_lifted": "{{ is_state('binary_sensor.oasismisttm_4_5l_water_tank_lifted','on') }}",
+    "is_on": "{{ is_state('humidifier.oasismisttm_4_5l','on') }}",
+    "target": 50,
+    "band": 2,
+    "on_below": 48,
+    "off_above": 52
+  }
+}

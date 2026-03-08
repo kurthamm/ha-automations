@@ -1,0 +1,58 @@
+{
+  "id": "1750739235026",
+  "alias": "Master Bedroom - Motion Lighting with Auto-Off and DND",
+  "description": "Turn on lights when motion is detected unless DND is active, then turn off after configurable minutes of no motion.",
+  "triggers": [
+    {
+      "entity_id": "binary_sensor.master_bedroom_sensor_motion",
+      "from": "off",
+      "to": "on",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set now_time = now().strftime('%H:%M:%S') %} {% set is_weekday = now().weekday() < 5 %} {% if is_weekday %}\n  {% set dnd_start = states('input_datetime.bedroom_weekday_dnd_start') %}\n  {% set dnd_end = states('input_datetime.bedroom_weekday_dnd_end') %}\n{% else %}\n  {% set dnd_start = states('input_datetime.bedroom_weekend_dnd_start') %}\n  {% set dnd_end = states('input_datetime.bedroom_weekend_dnd_end') %}\n{% endif %} {% set in_dnd = (dnd_start < dnd_end and dnd_start <= now_time < dnd_end) or\n                (dnd_start > dnd_end and (now_time >= dnd_start or now_time < dnd_end)) %}\n{{ not in_dnd }}\n"
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "light.master_bedroom"
+      },
+      "data": {
+        "brightness_pct": 100,
+        "transition": 1
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "wait_for_trigger": [
+        {
+          "entity_id": "binary_sensor.master_bedroom_sensor_motion",
+          "from": "on",
+          "to": "off",
+          "trigger": "state"
+        }
+      ]
+    },
+    {
+      "delay": {
+        "minutes": "{{ states('input_number.bedroom_motion_off_delay') | int(15) }}"
+      }
+    },
+    {
+      "condition": "state",
+      "entity_id": "binary_sensor.master_bedroom_sensor_motion",
+      "state": "off"
+    },
+    {
+      "target": {
+        "entity_id": "light.master_bedroom"
+      },
+      "action": "light.turn_off"
+    }
+  ],
+  "mode": "restart"
+}

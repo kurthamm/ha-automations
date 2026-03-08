@@ -1,0 +1,242 @@
+[
+  {
+    "id": "1750574034202",
+    "entity_id": "automation.litter_low",
+    "alias": "Litter Box Notifications",
+    "state": "off"
+  },
+  {
+    "id": "1754112197265",
+    "entity_id": "automation.litter_robot_waste_full_reminder_evenings",
+    "alias": "Litter Robot: Full Waste Drawer Evening TTS Alert",
+    "state": "off"
+  },
+  {
+    "id": "1750740014504",
+    "entity_id": "automation.outdoor_lighting_sunset_on_dim_late_off_at_sunrise",
+    "alias": "Outdoor Lighting - Sunset On, Dim Late, Off at Sunrise",
+    "state": "on"
+  },
+  {
+    "id": "1755023607279",
+    "entity_id": "automation.garage_lights_on_with_motion_7am_midnight",
+    "alias": "Garage: Lights On with Motion (When Dark)",
+    "state": "on"
+  },
+  {
+    "id": "1755023639882",
+    "entity_id": "automation.garage_lights_off_after_5_min_no_motion",
+    "alias": "Garage: Lights Auto-Off 15 Min After On",
+    "state": "on"
+  },
+  {
+    "id": "1750739235026",
+    "entity_id": "automation.master_bedroom_turn_on_lights_on_motion_dnd_aware",
+    "alias": "Master Bedroom - Motion Lighting with Auto-Off and DND",
+    "state": "on"
+  },
+  {
+    "id": "master_bedroom_auto_off_after_manual_on",
+    "entity_id": "automation.master_bedroom_auto_off_after_manual_light_on_2",
+    "alias": "Master Bedroom - Auto-Off After Manual Light On",
+    "state": "on"
+  },
+  {
+    "id": "1750907594503",
+    "entity_id": "automation.half_bath_motion_activated_light",
+    "alias": "Half Bath: Motion Light (3 Min Auto-Off)",
+    "state": "on"
+  },
+  {
+    "id": "1750949911089",
+    "entity_id": "automation.turn_off_office_lights_when_kurt_leaves_home",
+    "alias": "Turn Off Office Lights When Kurt's Phone Leaves Home",
+    "state": "off"
+  },
+  {
+    "id": "1752766575284",
+    "entity_id": "automation.office_lights_blink_for_meetings",
+    "alias": "Office: Blink Lights for Calendar Meetings",
+    "state": "on"
+  },
+  {
+    "id": "1753424083503",
+    "entity_id": "automation.smart_office_humidifier_manager",
+    "alias": "Office: Smart Humidifier Auto-Control",
+    "state": "off"
+  },
+  {
+    "id": "1752357553680",
+    "entity_id": "automation.open_garage_20_percent_at_7_am",
+    "alias": "Garage: Morning Vent Open (Configurable Time & Position)",
+    "state": "on"
+  },
+  {
+    "id": "1752595601249",
+    "entity_id": "automation.unlock_u_bolt_when_garage_opens",
+    "alias": "Kitchen Door: Auto-Unlock When Garage Opens",
+    "state": "on"
+  },
+  {
+    "id": "1752677933308",
+    "entity_id": "automation.auto_vent_close_garage_to_20_after_5_minutes_open",
+    "alias": "Garage: Auto-Close to Vent After Timeout",
+    "state": "on"
+  },
+  {
+    "id": "1755022260159",
+    "entity_id": "automation.walmart_garage_open_when_driver_is_on_the_way",
+    "alias": "Walmart Delivery: Open Garage When Driver En Route",
+    "state": "on"
+  },
+  {
+    "id": "1755022322858",
+    "entity_id": "automation.walmart_garage_partial_close_after_delivered_10_min",
+    "alias": "Walmart Delivery: Close Garage to Vent 10 Min After Delivered",
+    "state": "on"
+  },
+  {
+    "id": "1755022349829",
+    "entity_id": "automation.walmart_garage_reset_override_when_safe",
+    "alias": "Walmart Delivery: Reset Override When Garage Closed",
+    "state": "on"
+  },
+  {
+    "id": "1754115757466",
+    "entity_id": "automation.microwave_done_tts_alert_all_speakers",
+    "alias": "Microwave Done - TTS Alert All Speakers",
+    "state": "on"
+  },
+  {
+    "id": "1754854301325",
+    "entity_id": "automation.tovala_done_tts_all_speakers_parallel",
+    "alias": "Kitchen: Tovala Oven Done TTS Alert",
+    "state": "on"
+  },
+  {
+    "id": "1761495965831",
+    "entity_id": "automation.smoke_co_emergency_alert_system",
+    "alias": "Smoke/CO Emergency Alert System",
+    "state": "on"
+  },
+  {
+    "id": "1763239885300",
+    "entity_id": "automation.sync_garage_light_with_opener_indicator_2",
+    "alias": "Garage: Sync Hue Light with Door Opener LED",
+    "state": "on"
+  },
+  {
+    "id": "1764217910779",
+    "entity_id": "automation.smart_hvac_control",
+    "alias": "[DEPRECATED] Smart HVAC Control",
+    "state": "off"
+  },
+  {
+    "id": "1733180000000",
+    "entity_id": "automation.hvac_room_temperature_alert",
+    "alias": "HVAC: Room Temperature Alert",
+    "state": "off"
+  },
+  {
+    "id": "1734480000000",
+    "entity_id": "automation.christmas_trees_sunset_to_midnight",
+    "alias": "Decorative Plugs: On at Sunset, Off at Midnight",
+    "state": "on"
+  },
+  {
+    "id": "den_dual_heater_control",
+    "entity_id": "automation.den_dual_heater_control",
+    "alias": "Den Dual-Heater Control",
+    "state": "on"
+  },
+  {
+    "id": "notify_kurt_garage_opened",
+    "entity_id": "automation.notify_kurt_garage_door_opened",
+    "alias": "Notify Kurt - Garage Door Opened",
+    "state": "on"
+  },
+  {
+    "id": "energy_monitor_1",
+    "entity_id": "automation.energy_hvac_extended_heating_alert",
+    "alias": "Energy: HVAC Extended Heating Alert",
+    "state": "on"
+  },
+  {
+    "id": "energy_monitor_3",
+    "entity_id": "automation.energy_daily_hvac_summary",
+    "alias": "Energy: Daily HVAC Summary",
+    "state": "on"
+  },
+  {
+    "id": "hvac_fan_circulation",
+    "entity_id": "automation.hvac_fan_circulation",
+    "alias": "HVAC: Fan Circulation",
+    "state": "on"
+  },
+  {
+    "id": "upstairs_climate_control",
+    "entity_id": "automation.upstairs_climate_control",
+    "alias": "Upstairs Climate Control",
+    "state": "on"
+  },
+  {
+    "id": "frigate_person_garage",
+    "entity_id": "automation.frigate_person_detected_in_garage",
+    "alias": "Frigate Person Detected in Garage",
+    "state": "on"
+  },
+  {
+    "id": "syslog_wan_outage",
+    "entity_id": "automation.syslog_wan_outage_alert",
+    "alias": "Syslog: WAN Outage Alert",
+    "state": "on"
+  },
+  {
+    "id": "syslog_deauth_counter",
+    "entity_id": "automation.syslog_count_wifi_deauths",
+    "alias": "Syslog: Count WiFi Deauths",
+    "state": "on"
+  },
+  {
+    "id": "syslog_deauth_storm",
+    "entity_id": "automation.syslog_deauth_storm_alert",
+    "alias": "Syslog: Deauth Storm Alert",
+    "state": "on"
+  },
+  {
+    "id": "syslog_deauth_reset",
+    "entity_id": "automation.syslog_reset_deauth_counter",
+    "alias": "Syslog: Reset Deauth Counter",
+    "state": "on"
+  },
+  {
+    "id": "syslog_aimesh_alert",
+    "entity_id": "automation.syslog_aimesh_problem",
+    "alias": "Syslog: AiMesh Problem",
+    "state": "on"
+  },
+  {
+    "id": "syslog_dfs_radar",
+    "entity_id": "automation.syslog_dfs_radar_alert",
+    "alias": "Syslog: DFS Radar Alert",
+    "state": "on"
+  },
+  {
+    "id": "syslog_router_reboot",
+    "entity_id": "automation.syslog_router_reboot",
+    "alias": "Syslog: Router Reboot",
+    "state": "on"
+  },
+  {
+    "id": "walmart_garage_safety_timeout_1770918651",
+    "entity_id": "automation.walmart_delivery_safety_timeout_45_min_max",
+    "alias": "Walmart Delivery: Safety Timeout (45 min max)",
+    "state": "on"
+  },
+  {
+    "id": "office_sunrise",
+    "entity_id": "automation.office_sunrise",
+    "alias": "Smooth Sunrise Simulation - All Hue Ambiance Lamps",
+    "state": "off"
+  }
+]

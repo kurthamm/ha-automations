@@ -1,0 +1,393 @@
+{
+  "id": "office_sunrise",
+  "alias": "Smooth Sunrise Simulation - All Hue Ambiance Lamps",
+  "description": "Realistic 60-minute sunrise with smooth gradual transitions",
+  "triggers": [
+    {
+      "platform": "sun",
+      "event": "sunrise",
+      "offset": "-01:00:00"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 1,
+        "color_temp_kelvin": 1800,
+        "transition": 30
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 2,
+        "color_temp_kelvin": 1900,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 3,
+        "color_temp_kelvin": 2000,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 5,
+        "color_temp_kelvin": 2100,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 7,
+        "color_temp_kelvin": 2200,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 10,
+        "color_temp_kelvin": 2300,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 13,
+        "color_temp_kelvin": 2400,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 17,
+        "color_temp_kelvin": 2500,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 22,
+        "color_temp_kelvin": 2600,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 27,
+        "color_temp_kelvin": 2700,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 33,
+        "color_temp_kelvin": 2800,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 39,
+        "color_temp_kelvin": 2900,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 45,
+        "color_temp_kelvin": 3100,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 52,
+        "color_temp_kelvin": 3300,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 58,
+        "color_temp_kelvin": 3500,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 65,
+        "color_temp_kelvin": 3800,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 71,
+        "color_temp_kelvin": 4100,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 77,
+        "color_temp_kelvin": 4400,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 83,
+        "color_temp_kelvin": 4800,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "delay": "00:03:00"
+    },
+    {
+      "target": {
+        "entity_id": [
+          "light.hue_ambiance_lamp_2",
+          "light.hue_ambiance_lamp_3",
+          "light.hue_ambiance_lamp_4",
+          "light.hue_ambiance_lamp_5"
+        ]
+      },
+      "data": {
+        "brightness_pct": 90,
+        "color_temp_kelvin": 5200,
+        "transition": 180
+      },
+      "action": "light.turn_on"
+    }
+  ],
+  "mode": "single"
+}

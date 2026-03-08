@@ -1,0 +1,57 @@
+{
+  "id": "master_bedroom_auto_off_after_manual_on",
+  "alias": "Master Bedroom - Auto-Off After Manual Light On",
+  "description": "Turns off Master Bedroom light after configurable minutes after manual activation if no motion is detected.",
+  "triggers": [
+    {
+      "entity_id": "light.master_bedroom",
+      "to": "on",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "state",
+      "entity_id": "binary_sensor.master_bedroom_sensor_motion",
+      "state": "off"
+    }
+  ],
+  "actions": [
+    {
+      "delay": {
+        "minutes": "{{ states('input_number.bedroom_manual_off_delay') | int(5) }}"
+      }
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "binary_sensor.master_bedroom_sensor_motion",
+              "state": "off"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": "light.master_bedroom"
+              },
+              "action": "light.turn_off"
+            }
+          ]
+        }
+      ],
+      "default": [
+        {
+          "data": {
+            "name": "Master Bedroom Auto-Off",
+            "message": "Did not turn off \u2014 motion was detected after delay."
+          },
+          "action": "logbook.log"
+        }
+      ]
+    }
+  ],
+  "mode": "restart"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "1752595601249",
+  "alias": "Unlock U\u2011Bolt When Garage Opens",
+  "description": "Automatically unlock the garage lock when the garage door opens.",
+  "triggers": [
+    {
+      "entity_id": "cover.door_position",
+      "to": "open",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "lock.u_bolt_wifi"
+      },
+      "action": "lock.unlock"
+    }
+  ],
+  "mode": "single"
+}

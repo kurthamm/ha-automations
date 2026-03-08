@@ -1,0 +1,55 @@
+{
+  "id": "1750907594503",
+  "alias": "Half Bath \u2013 Motion-Activated Light",
+  "description": "Turn light.half_bathroom on with motion; turn it off 3 min after the last motion event (max 20 min runtime).",
+  "triggers": [
+    {
+      "id": "motion_on",
+      "entity_id": "binary_sensor.half_bath_sensor_motion",
+      "from": "off",
+      "to": "on",
+      "trigger": "state"
+    }
+  ],
+  "actions": [
+    {
+      "alias": "Turn light on immediately",
+      "target": {
+        "entity_id": "light.half_bathroom"
+      },
+      "data": {
+        "brightness_pct": 100
+      },
+      "action": "light.turn_on"
+    },
+    {
+      "alias": "Wait until motion stops for 3 min (or 20 min max)",
+      "wait_for_trigger": [
+        {
+          "entity_id": "binary_sensor.half_bath_sensor_motion",
+          "from": "on",
+          "to": "off",
+          "for": {
+            "minutes": 3
+          },
+          "trigger": "state"
+        }
+      ],
+      "timeout": {
+        "minutes": 20
+      },
+      "continue_on_timeout": true
+    },
+    {
+      "alias": "Turn light off",
+      "target": {
+        "entity_id": "light.half_bathroom"
+      },
+      "action": "light.turn_off"
+    }
+  ],
+  "trace": {
+    "stored_traces": 20
+  },
+  "mode": "restart"
+}

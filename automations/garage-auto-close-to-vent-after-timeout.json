@@ -1,0 +1,58 @@
+{
+  "id": "1752677933308",
+  "alias": "Auto\u2011Vent Close Garage After Configured Time Above Threshold",
+  "description": "If the garage stays above threshold for configured minutes and it's not a Walmart delivery, close it to vent position and lock the kitchen door if unlocked.",
+  "triggers": [
+    {
+      "trigger": "template",
+      "value_template": "{{ state_attr('cover.door_position', 'current_position') | int(0) > states('input_number.garage_auto_close_threshold') | int(25) }}",
+      "for": {
+        "minutes": "{{ states('input_number.garage_auto_close_delay') | int(15) }}"
+      }
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "state",
+      "entity_id": "input_boolean.walmart_garage_override",
+      "state": "off"
+    },
+    {
+      "condition": "template",
+      "value_template": "{{ state_attr('cover.door_position', 'current_position') | int(0) > states('input_number.garage_auto_close_threshold') | int(25) }}"
+    }
+  ],
+  "actions": [
+    {
+      "target": {
+        "entity_id": "cover.door_position"
+      },
+      "data": {
+        "position": "{{ states('input_number.garage_morning_vent_position') | int(20) }}"
+      },
+      "action": "cover.set_cover_position"
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "lock.u_bolt_wifi",
+              "state": "unlocked"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": "lock.u_bolt_wifi"
+              },
+              "action": "lock.lock"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "restart"
+}

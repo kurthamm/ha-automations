@@ -1,0 +1,31 @@
+{
+  "id": "syslog_deauth_storm",
+  "alias": "Syslog: Deauth Storm Alert",
+  "description": "Alert when suspicious deauth counter hits threshold (real attacks, not roaming)",
+  "triggers": [
+    {
+      "trigger": "numeric_state",
+      "entity_id": "counter.wifi_deauth_events",
+      "above": 15
+    }
+  ],
+  "actions": [
+    {
+      "action": "notify.mobile_app_kurt_s_flip_7",
+      "data": {
+        "title": "\ud83c\udf0a WiFi Deauth Storm",
+        "message": "{{ states('counter.wifi_deauth_events') }} suspicious disconnects in 2 min \u2014 possible attack. Check AiMesh.",
+        "data": {
+          "priority": "high"
+        }
+      }
+    },
+    {
+      "action": "counter.reset",
+      "target": {
+        "entity_id": "counter.wifi_deauth_events"
+      }
+    }
+  ],
+  "mode": "single"
+}

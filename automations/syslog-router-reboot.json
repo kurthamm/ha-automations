@@ -1,0 +1,27 @@
+{
+  "id": "syslog_router_reboot",
+  "alias": "Syslog: Router Reboot",
+  "description": "Detect when router restarts",
+  "mode": "single",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "syslog_receiver_message"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{{ 'klogd started' in trigger.event.data.message | lower }}"
+    }
+  ],
+  "actions": [
+    {
+      "action": "notify.mobile_app_kurt_s_flip_7",
+      "data": {
+        "title": "\ud83d\udd04 Router Rebooted",
+        "message": "ASUS ZenWiFi router has restarted"
+      }
+    }
+  ]
+}

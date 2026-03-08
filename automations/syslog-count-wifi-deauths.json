@@ -1,0 +1,27 @@
+{
+  "id": "syslog_deauth_counter",
+  "alias": "Syslog: Count WiFi Deauths",
+  "description": "Increment counter on suspicious deauth events (excludes normal roaming)",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "syslog_receiver_message"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set msg = trigger.event.data.message | lower %}\n{% set is_deauth = \"deauth\" in msg or \"disassoc\" in msg or \"sta left\" in msg %}\n{% set is_normal_roaming = \"leaving\" in msg or \"has left\" in msg %}\n{{ is_deauth and not is_normal_roaming }}"
+    }
+  ],
+  "actions": [
+    {
+      "action": "counter.increment",
+      "target": {
+        "entity_id": "counter.wifi_deauth_events"
+      }
+    }
+  ],
+  "mode": "parallel",
+  "max": 50
+}

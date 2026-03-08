@@ -1,0 +1,107 @@
+{
+  "id": "1755022322858",
+  "alias": "Walmart Garage - PARTIAL CLOSE after delivered (10 min)",
+  "description": "When Walmart push says delivered, wait 10 minutes then set garage to configured vent position, restore override.",
+  "triggers": [
+    {
+      "entity_id": "sensor.sm_f766u_last_notification",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{{ state_attr('sensor.sm_f766u_last_notification','package') == 'com.walmart.android' }}"
+    },
+    {
+      "condition": "template",
+      "value_template": "{% set n = (states('sensor.sm_f766u_last_notification') or '') | lower %} {{ ' were delivered at ' in n or 'delivery complete' in n or 'delivered at' in n or ' has been delivered' in n or ' was delivered' in n or 'order delivered' in n }}"
+    },
+    {
+      "condition": "or",
+      "conditions": [
+        {
+          "condition": "template",
+          "value_template": "{{ state_attr('cover.door_position', 'current_position') | int(0) > states('input_number.garage_morning_vent_position') | int(20) }}"
+        },
+        {
+          "condition": "state",
+          "entity_id": "cover.door_position",
+          "state": "open"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action": "persistent_notification.create",
+      "data": {
+        "title": "Walmart Delivery Complete",
+        "message": "Detected via Last Notification. Will set garage to vent position in 10 minutes."
+      }
+    },
+    {
+      "delay": {
+        "minutes": 10
+      }
+    },
+    {
+      "condition": "template",
+      "value_template": "{{ state_attr('cover.door_position', 'current_position') | int(0) > states('input_number.garage_morning_vent_position') | int(20) }}"
+    },
+    {
+      "action": "cover.set_cover_position",
+      "target": {
+        "entity_id": "cover.door_position"
+      },
+      "data": {
+        "position": "{{ states('input_number.garage_morning_vent_position') | int(20) }}"
+      }
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "lock.u_bolt_wifi",
+              "state": "unlocked"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "lock.lock",
+              "target": {
+                "entity_id": "lock.u_bolt_wifi"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "action": "input_boolean.turn_off",
+      "target": {
+        "entity_id": "input_boolean.walmart_garage_override"
+      }
+    },
+    {
+      "action": "persistent_notification.create",
+      "data": {
+        "title": "Garage Vented",
+        "message": "Garage set to vent position after Walmart delivery."
+      }
+    },
+    {
+      "action": "tts.speak",
+      "target": {
+        "entity_id": "tts.home_assistant_cloud"
+      },
+      "data": {
+        "message": "Walmart delivery complete. Garage vented to {{ states('input_number.garage_morning_vent_position') | int(20) }} percent.",
+        "media_player_entity_id": "media_player.home_speakers_all"
+      }
+    }
+  ],
+  "mode": "single"
+}

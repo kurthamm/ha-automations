@@ -1,0 +1,138 @@
+{
+  "id": "1764217910779",
+  "alias": "DO NOT USE!",
+  "description": "",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/5"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "variables": {
+        "comfort_band": 4,
+        "current_hour": "{{ now().hour + (now().minute / 60) }}",
+        "is_weekend": "{{ now().weekday() in [5, 6] }}",
+        "stacey_home_today": "{{ is_state(\"input_boolean.stacey_home_today\", \"on\") }}",
+        "morning_wake": "{{ state_attr(\"input_datetime.hvac_morning_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_morning_wake\", \"minute\") / 60) }}",
+        "stacey_leaves": "{{ state_attr(\"input_datetime.hvac_stacey_leaves\", \"hour\") + (state_attr(\"input_datetime.hvac_stacey_leaves\", \"minute\") / 60) }}",
+        "stacey_home": "{{ state_attr(\"input_datetime.hvac_stacey_home\", \"hour\") + (state_attr(\"input_datetime.hvac_stacey_home\", \"minute\") / 60) }}",
+        "weekend_wake": "{{ state_attr(\"input_datetime.hvac_weekend_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_wake\", \"minute\") / 60) }}",
+        "weekday_bedtime": "{{ state_attr(\"input_datetime.hvac_weekday_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekday_bedtime\", \"minute\") / 60) }}",
+        "weekend_bedtime": "{{ state_attr(\"input_datetime.hvac_weekend_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_bedtime\", \"minute\") / 60) }}",
+        "morning_temp": "{{ states(\"input_number.hvac_stacey_morning_temp\") | float(68) }}",
+        "kurt_work_temp": "{{ states(\"input_number.hvac_kurt_work_temp\") | float(64) }}",
+        "stacey_home_temp": "{{ states(\"input_number.hvac_stacey_home_temp\") | float(68) }}",
+        "bedtime_temp": "{{ states(\"input_number.hvac_bedtime_temp\") | float(64) }}",
+        "upstairs_day_temp": "{{ states(\"input_number.hvac_upstairs_day_temp\") | float(68) }}",
+        "upstairs_night_temp": "{{ states(\"input_number.hvac_upstairs_night_temp\") | float(64) }}",
+        "den_target": "{{ states(\"input_number.hvac_stacey_den_temp\") | float(69) }}",
+        "den_temp": "{{ states(\"sensor.temp_sensor_den_temperature\") | float(70) }}",
+        "heater_is_on": "{{ is_state(\"switch.den_heater\", \"on\") }}",
+        "is_weekday_wake": "{{ not is_weekend and current_hour >= morning_wake and current_hour < stacey_leaves }}",
+        "is_kurt_work": "{{ not is_weekend and not stacey_home_today and current_hour >= stacey_leaves and current_hour < stacey_home }}",
+        "is_stacey_home": "{{ not is_weekend and (current_hour >= stacey_home and current_hour < weekday_bedtime) }}",
+        "is_stacey_home_override": "{{ not is_weekend and stacey_home_today and current_hour >= morning_wake and current_hour < weekday_bedtime }}",
+        "is_weekday_night": "{{ not is_weekend and (current_hour >= weekday_bedtime or current_hour < morning_wake) }}",
+        "is_weekend_day": "{{ is_weekend and current_hour >= weekend_wake and current_hour < weekend_bedtime }}",
+        "is_weekend_night": "{{ is_weekend and (current_hour >= weekend_bedtime or current_hour < weekend_wake) }}",
+        "is_stacey_time": "{{ is_stacey_home or is_stacey_home_override or is_weekend_day }}",
+        "is_night_period": "{{ is_weekday_night or is_weekend_night }}",
+        "downstairs_target": "{% if is_weekday_wake %}{{ morning_temp }}{% elif is_kurt_work %}{{ kurt_work_temp }}{% elif is_stacey_time %}{{ stacey_home_temp }}{% else %}{{ bedtime_temp }}{% endif %}",
+        "upstairs_target": "{% if is_night_period %}{{ upstairs_night_temp }}{% else %}{{ upstairs_day_temp }}{% endif %}",
+        "den_needs_heat": "{{ den_temp < (den_target - 0.5) }}",
+        "den_warm_enough": "{{ den_temp >= (den_target + 0.5) }}",
+        "at_transition": "{% set transitions = [morning_wake, stacey_leaves, stacey_home, weekday_bedtime] %} {% if is_weekend %}\n  {% set transitions = [weekend_wake, weekend_bedtime] %}\n{% endif %} {% set within_5min = namespace(found=false) %} {% for time in transitions %}\n  {% if (current_hour >= time and current_hour < time + 0.083) %}\n    {% set within_5min.found = true %}\n  {% endif %}\n{% endfor %} {{ within_5min.found }}"
+      }
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ at_transition and stacey_home_today }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.stacey_home_today"
+          }
+        }
+      ]
+    },
+    {
+      "action": "climate.set_temperature",
+      "target": {
+        "entity_id": "climate.downstairs"
+      },
+      "data": {
+        "hvac_mode": "heat_cool",
+        "target_temp_low": "{{ downstairs_target | int }}",
+        "target_temp_high": "{{ (downstairs_target | int) + comfort_band }}"
+      }
+    },
+    {
+      "action": "climate.set_temperature",
+      "target": {
+        "entity_id": "climate.upstairs"
+      },
+      "data": {
+        "hvac_mode": "heat_cool",
+        "target_temp_low": "{{ upstairs_target | int }}",
+        "target_temp_high": "{{ (upstairs_target | int) + comfort_band }}"
+      }
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ is_stacey_time and den_needs_heat and not heater_is_on }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "switch.turn_on",
+          "target": {
+            "entity_id": "switch.den_heater"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ is_stacey_time and den_warm_enough and heater_is_on }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.den_heater"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ not is_stacey_time and heater_is_on }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.den_heater"
+          }
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

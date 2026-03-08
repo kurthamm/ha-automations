@@ -1,0 +1,24 @@
+{
+  "id": "notify_kurt_garage_opened",
+  "alias": "Notify Kurt - Garage Door Opened",
+  "description": "Send Clawdbot notification when garage door opens",
+  "triggers": [
+    {
+      "platform": "state",
+      "entity_id": "cover.door_position",
+      "from": "closed",
+      "to": "open"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "data": {
+        "title": "Garage Door",
+        "message": "The garage door just opened."
+      },
+      "action": "notify.notify"
+    }
+  ],
+  "mode": "single"
+}

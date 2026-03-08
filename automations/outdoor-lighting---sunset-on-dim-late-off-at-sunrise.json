@@ -1,0 +1,98 @@
+{
+  "id": "1750740014504",
+  "alias": "Outdoor Lighting - Sunset On, Dim Late, Off at Sunrise",
+  "description": "Controls Driveway, Frontyard, and Backyard lighting across evening and night",
+  "triggers": [
+    {
+      "event": "sunset",
+      "id": "sunset",
+      "trigger": "sun"
+    },
+    {
+      "at": "00:00:00",
+      "id": "midnight_dim",
+      "trigger": "time"
+    },
+    {
+      "event": "sunrise",
+      "id": "sunrise",
+      "trigger": "sun"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "sunset"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": [
+                  "light.driveway",
+                  "light.frontyard",
+                  "light.backyard"
+                ]
+              },
+              "data": {
+                "brightness_pct": 100,
+                "transition": 2
+              },
+              "action": "light.turn_on"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "midnight_dim"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": [
+                  "light.driveway",
+                  "light.frontyard",
+                  "light.backyard"
+                ]
+              },
+              "data": {
+                "brightness_pct": 50,
+                "transition": 2
+              },
+              "action": "light.turn_on"
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "sunrise"
+            }
+          ],
+          "sequence": [
+            {
+              "target": {
+                "entity_id": [
+                  "light.driveway",
+                  "light.frontyard",
+                  "light.backyard"
+                ]
+              },
+              "action": "light.turn_off"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

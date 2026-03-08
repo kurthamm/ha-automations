@@ -1,0 +1,27 @@
+{
+  "id": "syslog_dfs_radar",
+  "alias": "Syslog: DFS Radar Alert",
+  "description": "Alert when radar forces 5GHz channel switch",
+  "mode": "single",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "syslog_receiver_message"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set msg = trigger.event.data.message | lower %} {{ \"dfs\" in msg or \"radar detected\" in msg }}\n"
+    }
+  ],
+  "actions": [
+    {
+      "action": "notify.mobile_app_kurt_s_flip_7",
+      "data": {
+        "title": "\ud83d\udce1 DFS Radar Event",
+        "message": "5GHz channel switch. {{ trigger.event.data.message[:150] }}"
+      }
+    }
+  ]
+}

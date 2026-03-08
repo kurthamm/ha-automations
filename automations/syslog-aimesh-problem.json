@@ -1,0 +1,30 @@
+{
+  "id": "syslog_aimesh_alert",
+  "alias": "Syslog: AiMesh Problem",
+  "description": "Alert on AiMesh node issues",
+  "mode": "single",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "syslog_receiver_message"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{% set msg = trigger.event.data.message | lower %} {{ (\"aimesh\" in msg or \"mesh\" in msg) and \n   (\"disconnect\" in msg or \"lost\" in msg or \"fail\" in msg or \"offline\" in msg) }}\n"
+    }
+  ],
+  "actions": [
+    {
+      "action": "notify.mobile_app_kurt_s_flip_7",
+      "data": {
+        "title": "\ud83d\udd17 AiMesh Node Issue",
+        "message": "{{ trigger.event.data.message[:200] }}",
+        "data": {
+          "priority": "high"
+        }
+      }
+    }
+  ]
+}

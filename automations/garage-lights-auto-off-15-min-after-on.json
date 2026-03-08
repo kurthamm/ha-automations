@@ -1,0 +1,35 @@
+{
+  "id": "1755023639882",
+  "alias": "Garage Lights - OFF after 15 minutes",
+  "description": "Turn off garage lights 15 minutes after they turn on",
+  "triggers": [
+    {
+      "entity_id": "light.garage",
+      "to": "on",
+      "trigger": "state"
+    },
+    {
+      "entity_id": "light.ratgdo32_9a3a30_light",
+      "to": "on",
+      "trigger": "state"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "delay": {
+        "minutes": 15
+      }
+    },
+    {
+      "action": "light.turn_off",
+      "target": {
+        "entity_id": [
+          "light.garage",
+          "light.ratgdo32_9a3a30_light"
+        ]
+      }
+    }
+  ],
+  "mode": "restart"
+}

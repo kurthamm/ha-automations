@@ -1,0 +1,542 @@
+{
+  "id": "den_dual_heater_control",
+  "alias": "Den Dual-Heater Control",
+  "description": "Downstairs thermostat + den heaters (oil radiator + blower) with scheduling, manual override detection, weather-aware bedtime, and warm-weather cooling support. Upstairs is managed separately.",
+  "triggers": [
+    {
+      "trigger": "time_pattern",
+      "minutes": "/2"
+    }
+  ],
+  "conditions": [],
+  "actions": [
+    {
+      "variables": {
+        "cold_bedtime_bump": 2,
+        "cold_night_threshold": 25,
+        "warm_weather_threshold": 65,
+        "_comment_v3": "=== V3+V4: warm-weather + office sensor for Kurt work period ===",
+        "current_hour": "{{ now().hour + (now().minute / 60) }}",
+        "is_weekend": "{{ now().weekday() in [5, 6] }}",
+        "morning_wake": "{{ state_attr(\"input_datetime.hvac_morning_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_morning_wake\", \"minute\") / 60) }}",
+        "stacey_leaves": "{{ state_attr(\"input_datetime.hvac_stacey_leaves\", \"hour\") + (state_attr(\"input_datetime.hvac_stacey_leaves\", \"minute\") / 60) }}",
+        "stacey_home": "{{ state_attr(\"input_datetime.hvac_stacey_home\", \"hour\") + (state_attr(\"input_datetime.hvac_stacey_home\", \"minute\") / 60) }}",
+        "weekday_bedtime": "{{ state_attr(\"input_datetime.hvac_weekday_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekday_bedtime\", \"minute\") / 60) }}",
+        "weekend_wake": "{{ state_attr(\"input_datetime.hvac_weekend_wake\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_wake\", \"minute\") / 60) }}",
+        "weekend_bedtime": "{{ state_attr(\"input_datetime.hvac_weekend_bedtime\", \"hour\") + (state_attr(\"input_datetime.hvac_weekend_bedtime\", \"minute\") / 60) }}",
+        "outdoor_temp": "{{ state_attr(\"weather.forecast_home\", \"temperature\") | float(40) }}",
+        "den_temp": "{{ states(\"sensor.temp_sensor_den_temperature\") | float(70) }}",
+        "den_trend": "{{ states(\"sensor.den_temperature_trend\") | float(0) }}",
+        "nest_current_temp": "{{ state_attr('climate.downstairs', 'current_temperature') | float(72) }}",
+        "bedtime_temp": "{{ states(\"input_number.hvac_bedtime_temp\") | float(64) }}",
+        "morning_temp": "{{ states(\"input_number.hvac_stacey_morning_temp\") | float(70) }}",
+        "kurt_work_temp": "{{ states(\"input_number.hvac_kurt_work_temp\") | float(64) }}",
+        "stacey_home_temp": "{{ states(\"input_number.hvac_stacey_home_temp\") | float(68) }}",
+        "den_target": "{{ states(\"input_number.hvac_stacey_den_temp\") | float(71) }}",
+        "blower_is_on": "{{ is_state(\"switch.den_heater\", \"on\") }}",
+        "oil_is_on": "{{ is_state(\"switch.shellyplugus_841fe8f8772c\", \"on\") }}",
+        "oil_lockout": "{{ is_state(\"input_boolean.den_oil_lockout\", \"on\") }}",
+        "oil_tracking": "{{ is_state(\"input_boolean.den_oil_overheat_tracking\", \"on\") }}",
+        "manual_override": "{{ is_state(\"input_boolean.den_heater_manual_override\", \"on\") }}",
+        "stacey_home_override": "{{ is_state(\"input_boolean.stacey_home_today\", \"on\") }}",
+        "blower_boost_offset": "{{ states(\"input_number.den_blower_boost_offset\") | float(1.5) }}",
+        "blower_min_on": "{{ states(\"input_number.den_blower_min_on_minutes\") | float(5) }}",
+        "blower_min_off": "{{ states(\"input_number.den_blower_min_off_minutes\") | float(5) }}",
+        "oil_min_on": "{{ states(\"input_number.den_oil_min_on_minutes\") | float(20) }}",
+        "oil_min_off": "{{ states(\"input_number.den_oil_min_off_minutes\") | float(15) }}",
+        "lockout_offset": "{{ states(\"input_number.den_lockout_temp_offset\") | float(1.0) }}",
+        "lockout_release_offset": "{{ states(\"input_number.den_lockout_release_offset\") | float(0.3) }}",
+        "lockout_minutes_threshold": "{{ states(\"input_number.den_lockout_minutes\") | float(10) }}",
+        "trend_threshold": "{{ states(\"input_number.den_trend_suppress_threshold\") | float(0.05) }}",
+        "oil_last_changed_str": "{{ states(\"input_datetime.den_oil_last_changed\") }}",
+        "blower_last_changed_str": "{{ states(\"input_datetime.den_blower_last_changed\") }}",
+        "oil_overheat_start_str": "{{ states(\"input_datetime.den_oil_overheat_start\") }}",
+        "oil_switch_changed_minutes": "{{ ((as_timestamp(now()) - as_timestamp(states.switch.shellyplugus_841fe8f8772c.last_changed)) / 60) | float(999) }}",
+        "blower_switch_changed_minutes": "{{ ((as_timestamp(now()) - as_timestamp(states.switch.den_heater.last_changed)) / 60) | float(999) }}"
+      }
+    },
+    {
+      "variables": {
+        "is_warm_weather": "{{ outdoor_temp >= warm_weather_threshold }}",
+        "is_weekday_night": "{{ not is_weekend and (current_hour >= weekday_bedtime or current_hour < morning_wake) }}",
+        "is_weekend_night": "{{ is_weekend and (current_hour >= weekend_bedtime or current_hour < weekend_wake) }}",
+        "is_weekday_wake": "{{ not is_weekend and current_hour >= morning_wake and current_hour < stacey_leaves }}",
+        "is_weekend_day": "{{ is_weekend and current_hour >= weekend_wake and current_hour < weekend_bedtime }}",
+        "is_stacey_home": "{{ not is_weekend and (current_hour >= stacey_home and current_hour < weekday_bedtime) }}",
+        "is_kurt_work": "{% if is_state(\"input_boolean.stacey_away\", \"on\") %}{{ current_hour >= morning_wake and current_hour < (weekday_bedtime if not is_weekend else weekend_bedtime) }}{% else %}{{ not is_weekend and current_hour >= stacey_leaves and current_hour < stacey_home }}{% endif %}",
+        "adjusted_bedtime_temp": "{% if outdoor_temp < cold_night_threshold %}{{ bedtime_temp + cold_bedtime_bump }}{% else %}{{ bedtime_temp }}{% endif %}",
+        "temp_rising_fast": "{{ den_trend > trend_threshold }}",
+        "oil_last_changed_ts": "{{ strptime(oil_last_changed_str, \"%Y-%m-%d %H:%M:%S\") if oil_last_changed_str not in [\"unknown\", \"unavailable\"] else now() - timedelta(hours=24) }}",
+        "blower_last_changed_ts": "{{ strptime(blower_last_changed_str, \"%Y-%m-%d %H:%M:%S\") if blower_last_changed_str not in [\"unknown\", \"unavailable\"] else now() - timedelta(hours=24) }}",
+        "oil_overheat_start_ts": "{{ strptime(oil_overheat_start_str, \"%Y-%m-%d %H:%M:%S\") if oil_overheat_start_str not in [\"unknown\", \"unavailable\"] else now() }}",
+        "oil_recently_touched": "{{ oil_switch_changed_minutes < 4 }}",
+        "blower_recently_touched": "{{ blower_switch_changed_minutes < 4 }}",
+        "stacey_away": "{{ is_state(\"input_boolean.stacey_away\", \"on\") }}"
+      }
+    },
+    {
+      "variables": {
+        "is_stacey_time": "{% if is_state(\"input_boolean.stacey_away\", \"on\") %}{{ false }}{% else %}{{ is_stacey_home or is_weekend_day or stacey_home_override or manual_override }}{% endif %}",
+        "is_night_period": "{{ is_weekday_night or is_weekend_night }}",
+        "downstairs_target": "{% if is_state(\"input_boolean.stacey_away\", \"on\") %}{% if current_hour >= morning_wake and current_hour < (weekday_bedtime if not is_weekend else weekend_bedtime) %}{{ kurt_work_temp }}{% else %}{{ adjusted_bedtime_temp }}{% endif %}{% elif stacey_home_override or manual_override %}{{ stacey_home_temp }}{% elif is_weekday_wake %}{{ morning_temp }}{% elif is_kurt_work %}{{ kurt_work_temp }}{% elif is_stacey_time %}{{ stacey_home_temp }}{% else %}{{ adjusted_bedtime_temp }}{% endif %}",
+        "cool_target": "{% if is_kurt_work %}{{ states('input_number.kurt_office_cool_target') | float(71) }}{% else %}{{ states('input_number.hvac_cool_target') | float(72) }}{% endif %}",
+        "nest_too_warm": "{% if is_state(\"input_boolean.stacey_away\", \"on\") and current_hour >= morning_wake and current_hour < (weekday_bedtime if not is_weekend else weekend_bedtime) %}{{ states('sensor.temp_sensor_office_temperature') | float(72) >= cool_target }}{% elif not is_state(\"input_boolean.stacey_away\", \"on\") and not is_weekend and current_hour >= stacey_leaves and current_hour < stacey_home %}{{ states('sensor.temp_sensor_office_temperature') | float(72) >= cool_target }}{% else %}{{ nest_current_temp >= cool_target }}{% endif %}",
+        "oil_minutes_since_change": "{{ ((as_timestamp(now()) - as_timestamp(oil_last_changed_ts)) / 60) | float(999) }}",
+        "blower_minutes_since_change": "{{ ((as_timestamp(now()) - as_timestamp(blower_last_changed_ts)) / 60) | float(999) }}",
+        "oil_overheat_minutes": "{{ ((as_timestamp(now()) - as_timestamp(oil_overheat_start_ts)) / 60) | float(0) }}",
+        "at_transition": "{% set transitions = [morning_wake, stacey_leaves, stacey_home, weekday_bedtime] %}\n{% if is_weekend %}\n  {% set transitions = [weekend_wake, weekend_bedtime] %}\n{% endif %}\n{% set within_2min = namespace(found=false) %}\n{% for time in transitions %}\n  {% if time >= 23.95 %}\n    {% if (current_hour >= time and current_hour < 24.0) or (current_hour >= 0.0 and current_hour < (time + 0.05 - 24.0)) %}\n      {% set within_2min.found = true %}\n    {% endif %}\n  {% else %}\n    {% if (current_hour >= time and current_hour < time + 0.05) %}\n      {% set within_2min.found = true %}\n    {% endif %}\n  {% endif %}\n{% endfor %}\n{{ within_2min.found }}"
+      }
+    },
+    {
+      "variables": {
+        "heaters_suppressed": "{{ is_warm_weather and nest_too_warm }}",
+        "comfort_band": "{% if is_warm_weather %}{{ (cool_target | float - downstairs_target | float) | round(0) | int }}{% else %}8{% endif %}",
+        "target_temp_high": "{% set _sa_work = (is_state(\"input_boolean.stacey_away\", \"on\")) and current_hour >= morning_wake and current_hour < (weekday_bedtime if not is_weekend else weekend_bedtime) %}{% set _normal_work = (not is_state(\"input_boolean.stacey_away\", \"on\")) and not is_weekend and current_hour >= stacey_leaves and current_hour < stacey_home %}{% if is_weekday_night or is_weekend_night %}68{% elif is_warm_weather and (_sa_work or _normal_work) %}{% set _office = states('sensor.temp_sensor_office_temperature') | float(72) %}{{ (cool_target - (_office - nest_current_temp)) | round(0) | int }}{% elif is_warm_weather %}{{ cool_target | int }}{% else %}{{ (downstairs_target | int) + 8 }}{% endif %}",
+        "oil_can_turn_on": "{{ oil_minutes_since_change >= oil_min_off }}",
+        "oil_can_turn_off": "{{ oil_minutes_since_change >= oil_min_on }}",
+        "blower_can_turn_on": "{{ blower_minutes_since_change >= blower_min_off and not temp_rising_fast }}",
+        "blower_can_turn_off": "{{ blower_minutes_since_change >= blower_min_on }}",
+        "oil_needs_heat": "{{ den_temp < den_target and not heaters_suppressed }}",
+        "oil_warm_enough": "{{ den_temp >= den_target or heaters_suppressed }}",
+        "oil_too_hot": "{{ den_temp >= (den_target + lockout_offset) }}",
+        "oil_cool_enough": "{{ den_temp <= (den_target + lockout_release_offset) }}",
+        "blower_needs_heat": "{{ den_temp < (den_target - blower_boost_offset) and not heaters_suppressed }}",
+        "blower_warm_enough": "{{ den_temp >= (den_target - blower_boost_offset + 0.5) or heaters_suppressed }}"
+      }
+    },
+    {
+      "action": "climate.set_temperature",
+      "target": {
+        "entity_id": "climate.downstairs"
+      },
+      "data": {
+        "hvac_mode": "heat_cool",
+        "target_temp_low": "{{ downstairs_target | int }}",
+        "target_temp_high": "{% if is_weekday_night or is_weekend_night %}68{% elif is_warm_weather and is_kurt_work %}{% set _office = states('sensor.temp_sensor_office_temperature') | float(72) %}{{ (cool_target - (_office - nest_current_temp)) | round(0) | int }}{% elif is_warm_weather %}{{ cool_target | int }}{% else %}{{ (downstairs_target | int) + 8 }}{% endif %}"
+      }
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ at_transition and (stacey_home_override or manual_override) }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.stacey_home_today"
+          }
+        },
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.den_heater_manual_override"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ at_transition and is_night_period }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.shellyplugus_841fe8f8772c"
+          }
+        },
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.den_heater"
+          }
+        },
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.den_heater_manual_override"
+          }
+        },
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.stacey_home_today"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_oil_last_changed"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_blower_last_changed"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        },
+        {
+          "stop": "Bedtime safety shutdown"
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ heaters_suppressed and (oil_is_on or blower_is_on) }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.shellyplugus_841fe8f8772c"
+          }
+        },
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.den_heater"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_oil_last_changed"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_blower_last_changed"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        },
+        {
+          "stop": "Warm weather: heaters suppressed, Nest handles cooling"
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ is_stacey_time and oil_too_hot and not oil_tracking and not oil_lockout }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_on",
+          "target": {
+            "entity_id": "input_boolean.den_oil_overheat_tracking"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_oil_overheat_start"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ oil_tracking and not oil_too_hot }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.den_oil_overheat_tracking"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ oil_tracking and oil_too_hot and (oil_overheat_minutes >= lockout_minutes_threshold) and not oil_lockout }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_on",
+          "target": {
+            "entity_id": "input_boolean.den_oil_lockout"
+          }
+        },
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.den_oil_overheat_tracking"
+          }
+        },
+        {
+          "action": "switch.turn_off",
+          "target": {
+            "entity_id": "switch.shellyplugus_841fe8f8772c"
+          }
+        },
+        {
+          "action": "input_datetime.set_datetime",
+          "target": {
+            "entity_id": "input_datetime.den_oil_last_changed"
+          },
+          "data": {
+            "timestamp": "{{ now().timestamp() }}"
+          }
+        }
+      ]
+    },
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ oil_lockout and oil_cool_enough }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_off",
+          "target": {
+            "entity_id": "input_boolean.den_oil_lockout"
+          }
+        }
+      ]
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ is_stacey_time and oil_needs_heat and not oil_is_on and oil_can_turn_on and not oil_lockout }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "switch.turn_on",
+              "target": {
+                "entity_id": "switch.shellyplugus_841fe8f8772c"
+              }
+            },
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.den_oil_last_changed"
+              },
+              "data": {
+                "timestamp": "{{ now().timestamp() }}"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ is_stacey_time and oil_warm_enough and oil_is_on and oil_can_turn_off }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "switch.turn_off",
+              "target": {
+                "entity_id": "switch.shellyplugus_841fe8f8772c"
+              }
+            },
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.den_oil_last_changed"
+              },
+              "data": {
+                "timestamp": "{{ now().timestamp() }}"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ not is_stacey_time and oil_is_on and not manual_override }}"
+            }
+          ],
+          "sequence": [
+            {
+              "choose": [
+                {
+                  "conditions": [
+                    {
+                      "condition": "template",
+                      "value_template": "{{ oil_recently_touched }}"
+                    }
+                  ],
+                  "sequence": [
+                    {
+                      "action": "input_boolean.turn_on",
+                      "target": {
+                        "entity_id": "input_boolean.den_heater_manual_override"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "default": [
+                {
+                  "action": "switch.turn_off",
+                  "target": {
+                    "entity_id": "switch.shellyplugus_841fe8f8772c"
+                  }
+                },
+                {
+                  "action": "input_datetime.set_datetime",
+                  "target": {
+                    "entity_id": "input_datetime.den_oil_last_changed"
+                  },
+                  "data": {
+                    "timestamp": "{{ now().timestamp() }}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ is_stacey_time and blower_needs_heat and not blower_is_on and blower_can_turn_on }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "switch.turn_on",
+              "target": {
+                "entity_id": "switch.den_heater"
+              }
+            },
+            {
+              "action": "counter.increment",
+              "target": {
+                "entity_id": "counter.den_blower_cycles"
+              }
+            },
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.den_blower_last_changed"
+              },
+              "data": {
+                "timestamp": "{{ now().timestamp() }}"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ is_stacey_time and blower_warm_enough and blower_is_on and blower_can_turn_off }}"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "switch.turn_off",
+              "target": {
+                "entity_id": "switch.den_heater"
+              }
+            },
+            {
+              "action": "input_datetime.set_datetime",
+              "target": {
+                "entity_id": "input_datetime.den_blower_last_changed"
+              },
+              "data": {
+                "timestamp": "{{ now().timestamp() }}"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "template",
+              "value_template": "{{ not is_stacey_time and blower_is_on and not manual_override }}"
+            }
+          ],
+          "sequence": [
+            {
+              "choose": [
+                {
+                  "conditions": [
+                    {
+                      "condition": "template",
+                      "value_template": "{{ blower_recently_touched }}"
+                    }
+                  ],
+                  "sequence": [
+                    {
+                      "action": "input_boolean.turn_on",
+                      "target": {
+                        "entity_id": "input_boolean.den_heater_manual_override"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "default": [
+                {
+                  "action": "switch.turn_off",
+                  "target": {
+                    "entity_id": "switch.den_heater"
+                  }
+                },
+                {
+                  "action": "input_datetime.set_datetime",
+                  "target": {
+                    "entity_id": "input_datetime.den_blower_last_changed"
+                  },
+                  "data": {
+                    "timestamp": "{{ now().timestamp() }}"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}
