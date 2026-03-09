@@ -34,7 +34,9 @@
       "id": "alarm_cleared"
     },
     {
-      "entity_id": "input_boolean.silence_emergency_alerts",
+      "entity_id": [
+        "input_boolean.silence_emergency_alerts"
+      ],
       "to": "on",
       "trigger": "state",
       "id": "manual_silence"
