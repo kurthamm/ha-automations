@@ -1,1 +1,470 @@
-The actual content will be the fixed automation JSON
+{
+  "id": "1761495965831",
+  "alias": "Smoke/CO Emergency Alert System",
+  "description": "Dynamic multi-alarm emergency alerts with HVAC control and ALL LIGHTS ON",
+  "triggers": [
+    {
+      "entity_id": [
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4",
+        "binary_sensor.smoke_co_alarm_smoke_detected",
+        "binary_sensor.smoke_co_alarm_smoke_detected_2",
+        "binary_sensor.smoke_co_alarm_smoke_detected_3",
+        "binary_sensor.smoke_co_alarm_smoke_detected_4"
+      ],
+      "to": "on",
+      "trigger": "state",
+      "id": "alarm_triggered"
+    },
+    {
+      "entity_id": [
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3",
+        "binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4",
+        "binary_sensor.smoke_co_alarm_smoke_detected",
+        "binary_sensor.smoke_co_alarm_smoke_detected_2",
+        "binary_sensor.smoke_co_alarm_smoke_detected_3",
+        "binary_sensor.smoke_co_alarm_smoke_detected_4"
+      ],
+      "to": "off",
+      "trigger": "state",
+      "id": "alarm_cleared"
+    },
+    {
+      "entity_id": "input_boolean.silence_emergency_alerts",
+      "to": "on",
+      "trigger": "state",
+      "id": "manual_silence"
+    }
+  ],
+  "conditions": [
+    {
+      "condition": "template",
+      "value_template": "{{ (as_timestamp(now()) - as_timestamp(state_attr('automation.smoke_co_emergency_alert_system', 'last_triggered') | default(0))) > 300 or trigger.id == 'alarm_cleared' or trigger.id == 'manual_silence' }}"
+    }
+  ],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "alarm_triggered"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "scene.create",
+              "data": {
+                "scene_id": "pre_emergency_lights",
+                "snapshot_entities": [
+                  "light.master_bedroom",
+                  "light.office",
+                  "light.garage",
+                  "light.half_bathroom",
+                  "light.backyard",
+                  "light.frontyard",
+                  "light.driveway",
+                  "light.den",
+                  "light.ratgdo32_9a3a30_light",
+                  "light.upstairs_middle_bedroom",
+                  "light.ceiling_1",
+                  "light.ceiling_2",
+                  "light.ceiling_3",
+                  "light.back_patio"
+                ]
+              }
+            },
+            {
+              "action": "scene.create",
+              "data": {
+                "scene_id": "pre_emergency_hvac",
+                "snapshot_entities": [
+                  "climate.upstairs",
+                  "climate.downstairs"
+                ]
+              }
+            },
+            {
+              "action": "light.turn_on",
+              "target": {
+                "entity_id": [
+                  "light.master_bedroom",
+                  "light.office",
+                  "light.garage",
+                  "light.half_bathroom",
+                  "light.backyard",
+                  "light.frontyard",
+                  "light.driveway",
+                  "light.den",
+                  "light.ratgdo32_9a3a30_light",
+                  "light.upstairs_middle_bedroom",
+                  "light.ceiling_1",
+                  "light.ceiling_2",
+                  "light.ceiling_3",
+                  "light.back_patio"
+                ]
+              },
+              "data": {
+                "brightness_pct": 100
+              }
+            },
+            {
+              "if": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') }}\n"
+                }
+              ],
+              "then": [
+                {
+                  "action": "climate.turn_off",
+                  "target": {
+                    "entity_id": [
+                      "climate.upstairs",
+                      "climate.downstairs"
+                    ]
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "HVAC shut down to prevent smoke spread",
+                    "title": "HVAC DISABLED"
+                  }
+                },
+                {
+                  "action": "notify.mobile_app_fin_stacey_hamm",
+                  "data": {
+                    "message": "HVAC shut down to prevent smoke spread",
+                    "title": "HVAC DISABLED"
+                  }
+                }
+              ]
+            },
+            {
+              "variables": {
+                "co_alarms": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "smoke_alarms": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "total_alarms": "{{ co_alarms | length + smoke_alarms | length }}",
+                "notification_title": "{% if total_alarms > 1 %}\n  MULTIPLE ALARMS\n{% elif co_alarms | length > 0 %}\n  CARBON MONOXIDE DETECTED\n{% else %}\n  SMOKE DETECTED\n{% endif %}\n",
+                "notification_message": "{% if co_alarms | length > 0 and smoke_alarms | length > 0 %}\n  CO: {{ co_alarms | join(', ') }} | SMOKE: {{ smoke_alarms | join(', ') }}\n{% elif co_alarms | length > 0 %}\n  {{ co_alarms | join(', ') }}\n{% else %}\n  {{ smoke_alarms | join(', ') }}\n{% endif %}\n",
+                "voice_message": "{% if total_alarms > 1 %}\n  Multiple alarms! \n{% elif co_alarms | length > 0 %}\n  Emergency! \n{% else %}\n  Alert! \n{% endif %}\n{% if co_alarms | length > 0 %}\n  Carbon monoxide detected in {{ co_alarms | join(', ') }}. \n{% endif %}\n{% if smoke_alarms | length > 0 %}\n  Smoke detected in {{ smoke_alarms | join(', ') }}. \n{% endif %}\n{% if smoke_alarms | length > 0 %}\n  HVAC has been shut down. \n{% endif %}\n{% if co_alarms | length > 0 %}\n  Evacuate the house immediately and call 911.\n{% else %}\n  Check for fire immediately. Evacuate if necessary.\n{% endif %}\n"
+              }
+            },
+            {
+              "action": "persistent_notification.create",
+              "data": {
+                "message": "{{ notification_message }}",
+                "title": "{{ notification_title }}"
+              }
+            },
+            {
+              "action": "notify.mobile_app_fin_stacey_hamm",
+              "data": {
+                "message": "{{ notification_message }}",
+                "title": "{{ notification_title }}",
+                "data": {
+                  "importance": "max",
+                  "ttl": 0,
+                  "priority": "high",
+                  "channel": "Emergency",
+                  "sticky": true
+                }
+              }
+            },
+            {
+              "if": [
+                {
+                  "condition": "state",
+                  "entity_id": "input_boolean.silence_emergency_alerts",
+                  "state": "on"
+                }
+              ],
+              "then": [
+                {
+                  "action": "input_boolean.turn_off",
+                  "target": {
+                    "entity_id": "input_boolean.silence_emergency_alerts"
+                  }
+                }
+              ]
+            },
+            {
+              "repeat": {
+                "while": [
+                  {
+                    "condition": "template",
+                    "value_template": "{{ is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on')\n   or is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') }}\n"
+                  },
+                  {
+                    "condition": "state",
+                    "entity_id": "input_boolean.silence_emergency_alerts",
+                    "state": "off"
+                  }
+                ],
+                "sequence": [
+                  {
+                    "variables": {
+                      "co_alarms_loop": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                      "smoke_alarms_loop": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                      "total_alarms_loop": "{{ co_alarms_loop | length + smoke_alarms_loop | length }}",
+                      "voice_message_loop": "{% if total_alarms_loop > 1 %}\n  Multiple alarms! \n{% elif co_alarms_loop | length > 0 %}\n  Emergency! \n{% else %}\n  Alert! \n{% endif %}\n{% if co_alarms_loop | length > 0 %}\n  Carbon monoxide detected in {{ co_alarms_loop | join(', ') }}. \n{% endif %}\n{% if smoke_alarms_loop | length > 0 %}\n  Smoke detected in {{ smoke_alarms_loop | join(', ') }}. \n{% endif %}\n{% if co_alarms_loop | length > 0 %}\n  Evacuate the house immediately and call 911.\n{% else %}\n  Check for fire immediately. Evacuate if necessary.\n{% endif %}\n"
+                    }
+                  },
+                  {
+                    "action": "tts.speak",
+                    "target": {
+                      "entity_id": "tts.home_assistant_cloud"
+                    },
+                    "data": {
+                      "message": "{{ voice_message_loop }}",
+                      "media_player_entity_id": "media_player.home_speakers_all"
+                    }
+                  },
+                  {
+                    "delay": {
+                      "seconds": 15
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "variables": {
+                "final_co_alarms": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "final_smoke_alarms": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "any_still_active": "{{ final_co_alarms | length > 0 or final_smoke_alarms | length > 0 }}"
+              }
+            },
+            {
+              "if": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ not any_still_active }}"
+                }
+              ],
+              "then": [
+                {
+                  "action": "scene.turn_on",
+                  "target": {
+                    "entity_id": "scene.pre_emergency_lights"
+                  }
+                },
+                {
+                  "action": "scene.turn_on",
+                  "target": {
+                    "entity_id": "scene.pre_emergency_hvac"
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "Lights and HVAC restored to pre-emergency state.",
+                    "title": "LIGHTS & HVAC RESTORED"
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "All alarms have cleared.",
+                    "title": "ALL CLEAR"
+                  }
+                },
+                {
+                  "action": "notify.mobile_app_fin_stacey_hamm",
+                  "data": {
+                    "message": "All alarms have cleared.",
+                    "title": "ALL CLEAR"
+                  }
+                },
+                {
+                  "action": "tts.speak",
+                  "target": {
+                    "entity_id": "tts.home_assistant_cloud"
+                  },
+                  "data": {
+                    "message": "All clear. All alarms have cleared. It is now safe to return.",
+                    "media_player_entity_id": "media_player.home_speakers_all"
+                  }
+                },
+                {
+                  "action": "input_boolean.turn_off",
+                  "target": {
+                    "entity_id": "input_boolean.silence_emergency_alerts"
+                  }
+                }
+              ],
+              "else": [
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "Voice alerts stopped manually. {% if final_co_alarms | length > 0 %}CO: {{ final_co_alarms | join(\", \") }}{% endif %} {% if final_smoke_alarms | length > 0 %}{% if final_co_alarms | length > 0 %} | {% endif %}SMOKE: {{ final_smoke_alarms | join(\", \") }}{% endif %} still active. ",
+                    "title": "ALERTS SILENCED"
+                  }
+                },
+                {
+                  "action": "notify.mobile_app_fin_stacey_hamm",
+                  "data": {
+                    "message": "Voice alerts stopped manually. {% if final_co_alarms | length > 0 %}CO: {{ final_co_alarms | join(\", \") }}{% endif %} {% if final_smoke_alarms | length > 0 %}{% if final_co_alarms | length > 0 %} | {% endif %}SMOKE: {{ final_smoke_alarms | join(\", \") }}{% endif %} still active. ",
+                    "title": "ALERTS SILENCED"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "alarm_cleared"
+            }
+          ],
+          "sequence": [
+            {
+              "variables": {
+                "remaining_co": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "remaining_smoke": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "any_remaining": "{{ remaining_co | length > 0 or remaining_smoke | length > 0 }}",
+                "cleared_alarm_type": "{% if 'carbon_monoxide' in trigger.entity_id %}\n  carbon monoxide\n{% else %}\n  smoke\n{% endif %}\n",
+                "cleared_location": "{% if trigger.entity_id.endswith('_2') %}\n  Dining Room\n{% elif trigger.entity_id.endswith('_3') %}\n  Jamies Room\n{% elif trigger.entity_id.endswith('_4') %}\n  Lauras Room\n{% else %}\n  Master Suite Hallway\n{% endif %}\n"
+              }
+            },
+            {
+              "if": [
+                {
+                  "condition": "template",
+                  "value_template": "{{ any_remaining }}"
+                }
+              ],
+              "then": [
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "CLEARED: {{ cleared_location }} {{ cleared_alarm_type }} | STILL ACTIVE: {% if remaining_co | length > 0 %}CO: {{ remaining_co | join(\", \") }}{% endif %} {% if remaining_smoke | length > 0 %}{% if remaining_co | length > 0 %} | {% endif %}SMOKE: {{ remaining_smoke | join(\", \") }}{% endif %} ",
+                    "title": "CLEARED PLUS STILL ACTIVE"
+                  }
+                },
+                {
+                  "action": "notify.mobile_app_fin_stacey_hamm",
+                  "data": {
+                    "message": "CLEARED: {{ cleared_location }} {{ cleared_alarm_type }} | STILL ACTIVE: {% if remaining_co | length > 0 %}CO: {{ remaining_co | join(\", \") }}{% endif %} {% if remaining_smoke | length > 0 %}{% if remaining_co | length > 0 %} | {% endif %}SMOKE: {{ remaining_smoke | join(\", \") }}{% endif %} ",
+                    "title": "CLEARED PLUS STILL ACTIVE"
+                  }
+                },
+                {
+                  "if": [
+                    {
+                      "condition": "state",
+                      "entity_id": "input_boolean.silence_emergency_alerts",
+                      "state": "off"
+                    }
+                  ],
+                  "then": [
+                    {
+                      "action": "tts.speak",
+                      "target": {
+                        "entity_id": "tts.home_assistant_cloud"
+                      },
+                      "data": {
+                        "message": "Update. {{ cleared_location }} {{ cleared_alarm_type }} alarm cleared. {% if remaining_co | length > 0 %}Carbon monoxide still detected in {{ remaining_co | join(', ') }}. {% endif %} {% if remaining_smoke | length > 0 %}Smoke still detected in {{ remaining_smoke | join(', ') }}. {% endif %} {% if remaining_co | length > 0 %}Continue evacuation.{% else %}Continue checking for fire.{% endif %} ",
+                        "media_player_entity_id": "media_player.home_speakers_all"
+                      }
+                    }
+                  ]
+                }
+              ],
+              "else": [
+                {
+                  "action": "scene.turn_on",
+                  "target": {
+                    "entity_id": "scene.pre_emergency_lights"
+                  }
+                },
+                {
+                  "action": "scene.turn_on",
+                  "target": {
+                    "entity_id": "scene.pre_emergency_hvac"
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "Lights and HVAC restored to pre-emergency state.",
+                    "title": "LIGHTS & HVAC RESTORED"
+                  }
+                },
+                {
+                  "action": "persistent_notification.create",
+                  "data": {
+                    "message": "{{ cleared_location }} {{ cleared_alarm_type }} cleared. All alarms cleared.",
+                    "title": "ALL CLEAR"
+                  }
+                },
+                {
+                  "action": "notify.mobile_app_fin_stacey_hamm",
+                  "data": {
+                    "message": "{{ cleared_location }} {{ cleared_alarm_type }} cleared. All alarms cleared.",
+                    "title": "ALL CLEAR"
+                  }
+                },
+                {
+                  "action": "tts.speak",
+                  "target": {
+                    "entity_id": "tts.home_assistant_cloud"
+                  },
+                  "data": {
+                    "message": "All clear. {{ cleared_location }} {{ cleared_alarm_type }} alarm has cleared. It is now safe to return.",
+                    "media_player_entity_id": "media_player.home_speakers_all"
+                  }
+                },
+                {
+                  "action": "input_boolean.turn_off",
+                  "target": {
+                    "entity_id": "input_boolean.silence_emergency_alerts"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "manual_silence"
+            }
+          ],
+          "sequence": [
+            {
+              "variables": {
+                "active_co": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_carbon_monoxide_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n",
+                "active_smoke": "{% set alarms = [] %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected', 'on') %}\n  {% set alarms = alarms + ['Master Suite Hallway'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_2', 'on') %}\n  {% set alarms = alarms + ['Dining Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_3', 'on') %}\n  {% set alarms = alarms + ['Jamies Room'] %}\n{% endif %} {% if is_state('binary_sensor.smoke_co_alarm_smoke_detected_4', 'on') %}\n  {% set alarms = alarms + ['Lauras Room'] %}\n{% endif %} {{ alarms }}\n"
+              }
+            },
+            {
+              "action": "persistent_notification.create",
+              "data": {
+                "message": "Voice alerts stopped. STILL ACTIVE: {% if active_co | length > 0 %}CO: {{ active_co | join(\", \") }}{% endif %} {% if active_smoke | length > 0 %}{% if active_co | length > 0 %} | {% endif %}SMOKE: {{ active_smoke | join(\", \") }}{% endif %} ",
+                "title": "ALERTS SILENCED"
+              }
+            },
+            {
+              "action": "notify.mobile_app_fin_stacey_hamm",
+              "data": {
+                "message": "Voice alerts stopped. STILL ACTIVE: {% if active_co | length > 0 %}CO: {{ active_co | join(\", \") }}{% endif %} {% if active_smoke | length > 0 %}{% if active_co | length > 0 %} | {% endif %}SMOKE: {{ active_smoke | join(\", \") }}{% endif %} ",
+                "title": "ALERTS SILENCED"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}
